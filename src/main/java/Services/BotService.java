@@ -176,7 +176,7 @@ public class BotService {
                 .stream().filter(item -> item.getGameObjectType() == ObjectTypes.GASCLOUD)
                 .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
 
-        nearestPlayer.ifPresent(enemy -> nearestFood.ifPresent(food -> nearestGasCloud.ifPresent(gasCloud -> {
+        nearestPlayer.ifPresent(enemy -> nearestFood.ifPresent(food -> {
             if (enemy.getSize() < bot.getSize()) {
                 if (afterburner) {
                     toggleAfterburner();
@@ -196,10 +196,13 @@ public class BotService {
                     heading.set(getHeadingBetween(food));
                     target = food;
                 }
-            } else if (getDistanceBetween(bot, gasCloud) + gasCloud.getSize() < (2 * bot.getSize())) {
-                heading.set(-getHeadingBetween(gasCloud));
-                if (!afterburner && bot.getSize() > 20) {
-                    toggleAfterburner();
+            } else if (nearestGasCloud.isPresent()) {
+                var gasCloud = nearestGasCloud.get();
+                if (getDistanceBetween(bot, gasCloud) + gasCloud.getSize() < (2 * bot.getSize())) {
+                    heading.set(-getHeadingBetween(gasCloud));
+                    if (!afterburner && bot.getSize() > 20) {
+                        toggleAfterburner();
+                    }
                 }
             } else {
                 if (afterburner) {
@@ -208,7 +211,7 @@ public class BotService {
                 heading.set(getHeadingBetween(food));
                 target = food;
             }
-        })));
+        }));
 
         return heading.get();
     }
