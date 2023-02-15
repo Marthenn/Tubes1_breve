@@ -71,7 +71,7 @@ public class BotService {
                                 .findFirst());
                 newTarget.ifPresentOrElse(target -> {
                     this.target = target;
-                    System.out.println("Found new target: " + target);
+                    System.out.println("Found new target: " + target.getGameObjectType());
                     if (target.getSize() < bot.getSize()) {
                         playerAction.heading = getHeadingBetween(target);
                     } else {
@@ -92,14 +92,15 @@ public class BotService {
                     System.out.println("Shield amount: " + bot.getShieldCount());
                 }
 
-                if(runaway){
-                    playerAction.action = PlayerActions.FIRETELEPORT;
-                    teleportFlag = true;
-                    teleportHeading = playerAction.heading;
-                }else if(nearTorpedoes.size() > 0 &&  (getDistanceBetween(bot, nearTorpedoes.get(0)) <= bot.getSize() + 60) && bot.getSize() >= 30 && prevHeading != nearTorpedoes.get(0).currentHeading && bot.getShieldCount() > 0){
+                // if(runaway){
+                //     playerAction.action = PlayerActions.FIRETELEPORT;
+                //     teleportFlag = true;
+                //     teleportHeading = playerAction.heading;
+                // }else 
+                if(nearTorpedoes.size() > 0 &&  (getDistanceBetween(bot, nearTorpedoes.get(0)) <= bot.getSize() + 60) && bot.getSize() >= 30 && this.playerAction.heading != nearTorpedoes.get(0).currentHeading && bot.getShieldCount() > 0){
                         System.out.println("Shield Activated!");
                         playerAction.action = PlayerActions.ACTIVATESHIELD;
-                }else if(target.gameObjectType==ObjectTypes.PLAYER && bot.getSize() > 30 && getDistanceBetween(bot, target) < target.getSize() + bot.getSize() + 100 && bot.getTorpedoCount() > 0){
+                }else if(target.gameObjectType==ObjectTypes.PLAYER && bot.getSize() > 30 && getDistanceBetween(bot, target) - target.getSize() - bot.getSize() < bot.getSize()*2 && bot.getTorpedoCount() > 0){
                     System.out.println("Torpedoes Shot!");
                     playerAction.action = PlayerActions.FIRETORPEDOES;
                 }
