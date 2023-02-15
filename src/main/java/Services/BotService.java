@@ -14,10 +14,9 @@ public class BotService {
     private boolean afterburner = false;
     private GameObject target = null;
     private static final GameObject worldCenter = new GameObject(UUID.randomUUID(), 0, 0, 0, new Position(), null);
-    private static boolean teleportFlag = false;
+    private boolean teleportFlag = false;
     private static int teleportHeading = 0;
-    private static boolean runaway = false;
-    private static int prevHeading;
+    private UUID teleporterID;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -76,7 +75,6 @@ public class BotService {
                         playerAction.heading = getHeadingBetween(target);
                     } else {
                         playerAction.heading = findTarget();
-                        runaway = true;
                         
                     }
                 }, () -> playerAction.heading = findTarget());
@@ -97,14 +95,23 @@ public class BotService {
                 //     teleportFlag = true;
                 //     teleportHeading = playerAction.heading;
                 // }else 
-                if(nearTorpedoes.size() > 0 &&  (getDistanceBetween(bot, nearTorpedoes.get(0)) <= bot.getSize() + 60) && bot.getSize() >= 30 && this.playerAction.heading != nearTorpedoes.get(0).currentHeading && bot.getShieldCount() > 0){
+                if(nearTorpedoes.size() > 0 &&  (getDistanceBetween(bot, nearTorpedoes.get(0)) <= bot.getSize() + 60) && bot.getSize() >= 35 && (nearTorpedoes.get(0).currentHeading > 30 + bot.currentHeading || nearTorpedoes.get(0).currentHeading < bot.currentHeading - 30) && bot.getShieldCount() > 0){
                         System.out.println("Shield Activated!");
                         playerAction.action = PlayerActions.ACTIVATESHIELD;
-                }else if(target.gameObjectType==ObjectTypes.PLAYER && bot.getSize() > 30 && getDistanceBetween(bot, target) - target.getSize() - bot.getSize() < bot.getSize()*2 && bot.getTorpedoCount() > 0){
+                }else if(target.gameObjectType==ObjectTypes.PLAYER && target.gameObjectType!=ObjectTypes.FOOD && bot.getSize() > 30 && getDistanceBetween(bot, target) - target.getSize() - bot.getSize() < bot.getSize()*2 && bot.getTorpedoCount() > 0){
                     System.out.println("Torpedoes Shot!");
                     playerAction.action = PlayerActions.FIRETORPEDOES;
                 }
 
+                if(bot.getSize() > 30){
+                    getSupernovaDrop();
+                }
+                if(bot.getSupernovaCount()>0){
+                    System.out.println("SUPERNOVA ACQUIRED BITCHEEEESSSS");
+                    initiateSupernova();
+                }
+
+                
             }
         }
 
@@ -143,26 +150,90 @@ public class BotService {
         //         teleportHeading = 0;
         //     }
         // }
+        searchForTeleporter();
 
-        prevHeading = playerAction.heading;
         this.playerAction = playerAction;
     }
 
-    // private boolean isGettingCloser(GameObject object){
-    //     double currentDist = getDistanceBetween(bot, object);
-    //     double afterX = Math.cos(Math.toRadians(getHeadingBetween(object))) + object.getPosition().getX();
-    //     double afterY = Math.sin(Math.toRadians(getHeadingBetween(object))) + object.getPosition().getY();
+    private void searchForTeleporter(){
+        var teleporter = gameState.getGameObjects()
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER && item.id == teleporterID)
+                .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
         
-    //     var triangleX = Math.abs(bot.getPosition().getX() - afterX);
-    //     var triangleY = Math.abs(bot.getPosition().getY() - afterY);
-    //     double afterDist = Math.sqrt(triangleX * triangleX + triangleY * triangleY);
-    //     System.out.println("Current torpedo dist: " + currentDist);
-    //     System.out.println("After torpedo dist: " + afterDist);
-    //     if(afterDist > currentDist){
-    //         return false;
+        teleporter.ifPresentOrElse(null, ()-> teleportFlag = false);
+    }
+
+    // private void escape(){
+    //     var danger = gameState.getPlayerGameObjects()
+    //             .stream().filter(enemy -> enemy.id == bot.id && getDistanceBetween(enemy, bot) - enemy.getSize() - bot.getSize() <= (bot.getSize()*2) && enemy.getSize() >= bot.getSize())
+    //             .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
+        
+    //     if(!teleportFlag){
+    //         danger.ifPresent(enemy -> {
+    //             if(getHeadingBetween(enemy) >= 180){
+    //                 playerAction.heading = getHeadingBetween(enemy) - 180;
+    //             }else{
+    //                 playerAction.heading = getHeadingBetween(enemy) + 180;
+    //             }
+    //             playerAction.action = PlayerActions.TELEPORT;
+    //             teleportFlag = true;
+    //         });
+    //     }else{
+
     //     }
-    //     return true;
+                
     // }
+    
+    private void initiateSupernova(){
+        var players = gameState.getPlayerGameObjects()
+                        .stream().filter(item -> item.id != bot.id)
+                        .sorted(Comparator.comparing(item -> getDistanceBetween(bot, item))).collect(Collectors.toList());
+        double dist12 = 0;double dist23 = 0; double dist13 = 0;
+        if(players.size() > 1){
+            dist12 = getDistanceBetween(players.get(0), players.get(1));
+            if(players.size() > 2){
+                dist13 = getDistanceBetween(players.get(0), players.get(2));
+                dist23 = getDistanceBetween(players.get(1), players.get(2));
+            }
+        }
+
+        if(dist12 <=100 && dist13 <=100 && dist23<=100){
+            playerAction.heading = getHeadingBetween(players.get(0));
+            playerAction.action = PlayerActions.FIRESUPERNOVA;
+        }
+    }
+
+    private void getSupernovaDrop(){
+        var pickup = gameState.getGameObjects()
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER && item.id == teleporterID)
+                .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
+        if(!teleportFlag){
+            pickup.ifPresent(pickNova -> {
+                if(bot.getTeleporterCount() > 0){
+                    System.out.println("SUPERNOVA DETECTED");
+                    playerAction.heading = getHeadingBetween(pickNova);
+                    playerAction.action = PlayerActions.FIRETELEPORT;
+                    teleportFlag = true;
+                }
+            });
+        }else{
+            var teleporter = gameState.getGameObjects()
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER && item.id == teleporterID)
+                .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
+            
+            teleporter.ifPresent(teleportShot -> pickup.ifPresent(pickNova ->{
+                var players = gameState.getPlayerGameObjects()
+                    .stream().filter(item -> item.id != bot.id && (getDistanceBetween(teleportShot, item) - item.getSize() <= bot.getSize()*2 && item.getSize() >= bot.getSize()))
+                    .sorted(Comparator.comparing(item -> getDistanceBetween(teleportShot, item))).collect(Collectors.toList());
+                
+                if(players.isEmpty() && getDistanceBetween(pickNova, teleportShot) <= bot.getSize()){
+                    playerAction.action = PlayerActions.TELEPORT;
+                    teleportFlag = false;
+                }
+            }));
+        }
+        
+    }
 
     private int findTarget() {
         AtomicInteger heading = new AtomicInteger();
@@ -191,7 +262,7 @@ public class BotService {
                     toggleAfterburner();
                 }
                 if (getDistanceBetween(bot, enemy) + enemy.getSize() < (2 * bot.getSize())) {
-                    heading.set(-getHeadingBetween(enemy));
+                    heading.set(getHeadingBetween(enemy)%360);
                 } else {
                     heading.set(getHeadingBetween(food));
                     target = food;
