@@ -128,7 +128,7 @@ public class BotService {
      * Mengecek jika ada teleporter di sekitar bot
      */
     private void scanForTeleporter() {
-        if (teleportFlag && teleporterID == null) {
+        if (!teleportFlag && teleporterID == null) {
             var teleporter = getGameState().getGameObjects()
                     .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER)
                     .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
@@ -223,9 +223,6 @@ public class BotService {
         var nearestGasCloud = getGameState().getGameObjects()
                 .stream().filter(gasCloud -> gasCloud.getGameObjectType() == ObjectTypes.GASCLOUD)
                 .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
-
-        if (nearestFood.isEmpty()) System.out.println("NO FOOD");
-        if (nearestGasCloud.isEmpty()) System.out.println("NO GAS CLOUD");
 
         if (nearestGasCloud.isPresent() && getDistanceBetween(bot, nearestGasCloud.get()) - nearestGasCloud.get().getSize() < (2 * bot.getSize())) {
             heading = (180 + getHeadingBetween(nearestGasCloud.get())) % 360;
