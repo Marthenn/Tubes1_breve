@@ -52,7 +52,7 @@ public class BotService {
      */
     public void computeNextPlayerAction(PlayerAction playerAction) {
         //Scan for teleporter ID
-        if (teleportFlag && teleporterID != null) {
+        if (!teleportFlag && teleporterID == null) {
             scanForTeleporter();
         }
 
@@ -128,13 +128,11 @@ public class BotService {
      * Mengecek jika ada teleporter di sekitar bot
      */
     private void scanForTeleporter() {
-        if (!teleportFlag && teleporterID == null) {
-            var teleporter = getGameState().getGameObjects()
-                    .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER)
-                    .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
+        var teleporter = getGameState().getGameObjects()
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER)
+                .min(Comparator.comparing(item -> getDistanceBetween(bot, item)));
 
-            teleporter.ifPresent(tele -> teleporterID = tele.getId());
-        }
+        teleporter.ifPresent(tele -> teleporterID = tele.getId());
     }
 
     /**
