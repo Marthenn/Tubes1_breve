@@ -30,7 +30,7 @@ Tugas besar pertama IF2211 - Strategi Algoritma menugaskan mahasiswa untuk meran
 3. Jalankan runner pada `runner-publish` dengan perintah `dotnet GameRunner.dll`
 4. Jalankan engine pada `engine-publish` dengan perintah `dotnet Engine.dll`
 5. Jalankan logger pada `logger-publish` dengan perintah `dotnet Logger.dll`
-6. Jalankan seluruh bot yang ingin dimainkan (apabila reference bot yang ingin dimainkan maka jalankan perintah `dotnet ReferenceBot.dll` pada folder `reference-bot-publish`, bila bot hasil build dari tugas besar ini maka jalankan perintah `java -jar JavaBot.jar` pada folder `target` pada direktori tugas besar ini
+6. Jalankan seluruh bot yang ingin dimainkan (apabila reference bot yang ingin dimainkan maka jalankan perintah `dotnet ReferenceBot.dll` pada folder `reference-bot-publish`, bila bot hasil build dari tugas besar ini maka jalankan perintah `java -jar Breve.jar` pada folder `target` pada direktori tugas besar ini
 7. Setelah permainan selesai, muat berkas hasil logger pada visualiser yang terdapat pada folder `visualiser` di dalam `starter-pack`
 
 ## Anggota
